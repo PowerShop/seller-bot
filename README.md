@@ -1,1 +1,1 @@
-# minecraft-discord-webshop
+# seller bot
