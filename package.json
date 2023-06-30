@@ -1,0 +1,20 @@
+{
+    "name": "seller-bot",
+    "version": "1.0.0",
+    "description": "sell my voucher-bot",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "JonathanExam (.xyz)",
+    "license": "ISC",
+    "dependencies": {
+        "@fortune-inc/tw-voucher": "^1.0.10",
+        "discord.js": "^14.11.0",
+        "fs": "^0.0.1-security",
+        "minecraft-rcon-client": "^2.1.2",
+        "node-mcstatus": "^1.1.0",
+        "path": "^0.12.7"
+    }
+}

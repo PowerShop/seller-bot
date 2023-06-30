@@ -1,0 +1,15 @@
+{
+    "general": {
+        "bot": {
+            "clientId": "1124292775534415943",
+            "guildId": "1000433277942907043",
+            "token": "MTEyNDI5Mjc3NTUzNDQxNTk0Mw.GLIp7v.7NtuVw-Kl3USj56hc2win4ja-oa7o0OZeVZXpg",
+            "channelId": "1121151182535135362"
+        },
+
+        "transaction_logs": {
+            "enabled": true,
+            "channelId": "1122351333819822192"
+        }
+    }
+}
