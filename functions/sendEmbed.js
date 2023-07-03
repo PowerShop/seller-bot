@@ -37,9 +37,10 @@ function sendEmbed(title, description, color, footer, iconURL) {
 // ╚═╝  ╚═╝ ╚═════╝  ╚══╝╚══╝        ╚═╝    ╚═════╝      ╚═════╝ ╚══════╝╚══════╝  ╚═╝  
 
 /*
-    Example:
-    const myEmbed = sendEmbed('My title', 'My description', '#ff0000', 'My footer', 'https://cdn.discordapp.com/avatars/123456789012345678/123456789012345678.png');
-    message.channel.send({ embeds: [myEmbed] });
+    * const temp = sendEmbed('title', 'description', '#00ff00', 'footer', 'iconURL');
+    * interaction.reply({ embeds: [temp] }); 
+    * or 
+    * message.channel.send({ embeds: [temp] });
 */
 
 // More information about embed: https://discordjs.guide/popular-topics/embeds.html#embed-preview

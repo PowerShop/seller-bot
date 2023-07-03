@@ -1,0 +1,28 @@
+{
+  "__prefix?__": "%player% = player name, %amount% = amount of money",
+  "__phone?__": "Setting for recieve your money from player",
+  "__rate?__": "Setting for rate of money: 1 = playertopup * 1",
+  "voucher": {
+    "phone": "0923535594",
+    "rate": 1
+  },
+  "__command?__": "Below commands is run when player topup money",
+  "command": {
+    "enabled": true,
+    "when_player_topup_success": "ggg",
+    "when_player_topup_fail": "(remove command if you don't want to run when player topup fail)"
+  },
+  "__EditWhatEverYouWant__": "You can edit condition and command when player recharge money",
+  "__?__": "You can add more condition and command by add more line",
+  "__default?__": "A command will run when player recharge money but not match any condition",
+  "topup": {
+    "condition": {
+      "200": "g1",
+      "300": "g2",
+      "350": "g3",
+      "400": "g4",
+      "500": "g5",
+      "default": "gd"
+    }
+  }
+}

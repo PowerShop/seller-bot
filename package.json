@@ -13,6 +13,7 @@
         "@fortune-inc/tw-voucher": "^1.0.10",
         "discord.js": "^14.11.0",
         "fs": "^0.0.1-security",
+        "install": "^0.13.0",
         "minecraft-rcon-client": "^2.1.2",
         "node-mcstatus": "^1.1.0",
         "path": "^0.12.7"

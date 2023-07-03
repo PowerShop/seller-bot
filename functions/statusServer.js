@@ -3,9 +3,6 @@
 
 const fetch = require('node-fetch');
 
-// Import the server.json file
-// Clear cache
-
 
 // Request API to get the server status
 async function getServerStatus(address) {

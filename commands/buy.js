@@ -56,5 +56,5 @@ buy.execute = async function (interaction) {
     
 }
 
-// Export the command
+// Export the module
 module.exports = buy.toJSON();

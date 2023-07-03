@@ -13,6 +13,9 @@
 // ██║██║ ╚═╝ ██║██║     ╚██████╔╝██║  ██║   ██║   ██║  ██║██║ ╚████║   ██║   ██╗
 // ╚═╝╚═╝     ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝
 
+/*
+    Load all commands from commands folder
+*/
 
 // Export the commands with loop from commands folder
 const fs = require('fs');

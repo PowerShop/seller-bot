@@ -11,9 +11,9 @@ const { Client, GatewayIntentBits, REST, Routes, ActivityType } = require('disco
 // Import the config.json file
 const config = require('./config/discord.json');
 
-// Declare constants
+// Declare constants from config.json
 const clientId = config.general.bot.clientId;
-const channelId = config.general.bot.channelId;
+const channelId = config.general.topup_channel.channelId;
 const botToken = config.general.bot.token;
 
 // Import modules from my own files
@@ -35,10 +35,11 @@ const client = new Client({
 // Construct and prepare an instance of the REST module
 const rest = new REST({ version: '10' }).setToken(botToken);
 
+// Load all commands
+
 // Import Loader.js from the commands folder
 // const { ping, topup, rcon, help, setup, getrole, voucher, system } = require('./commands/loader');
 const command = require('./commands/loader');
-
 
 // Use Object.values() to get an array of all values (commands) from the command object
 const commands = Object.values(command);
@@ -90,15 +91,19 @@ client.on('interactionCreate', async interaction => {
 client.once('ready', async () => {
     console.log(`Ready! Logged in as ${client.user.tag}`);
 
-    // Delete the welcome message
-    // deleteWelcomeMessage(client, channelId);
+    // Check if the channel ID is null
+    if (channelId === null) {
+    } else {
+        // Delete the welcome message
+        // deleteWelcomeMessage(client, channelId);
+
+        // Send the welcome message
+        // sendWelcomeMessage(client, channelId);
+    }
 
     // Set the bot's activity
-    client.user.setActivity({ name: '/help | /buy', type: ActivityType.Watching });
+    client.user.setActivity({ name: '/help | /topup', type: ActivityType.Watching });
 
-    // Send welcome message to the channel
-    // sendWelcomeMessage(client, channelId);
-    
 
 });
 
@@ -111,12 +116,12 @@ client.on('messageCreate', async (message) => {
     // Don't delete messages from other channels
     if (message.channel.id !== channelId) return;
 
-    // Delete the message (from every user except bot's) after 10 seconds
+    // Delete the message (from every user except bot's)
     setTimeout(() => {
         message.delete()
             .then(deletedMessage => console.log("Message deleted."))
             .catch(console.error);
-    }, 10000); // รอ 10 วินาที (1000 มิลลิวินาที)
+    }, 3000);
 
 });
 

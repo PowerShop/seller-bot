@@ -1,0 +1,11 @@
+{
+    "__rcon__": "Your Rcon Port Not Server Port! => (Not here, put below)",
+    "general": {
+        "rcon": {
+            "host": "49.231.43.113",
+            "port": 26567,
+            "password": "atspx1150",
+            "timeout": 1500
+        }
+    }
+}
