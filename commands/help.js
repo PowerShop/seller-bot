@@ -7,8 +7,8 @@
 // ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
 
 /*
-    Just a simple help command
-    Edit the embed in embed_builder\help.js
+    * Just a simple help command
+    * Edit the embed in embed_builder\help.js
 */
 
 // Import SlashCommandBuilder

@@ -44,6 +44,13 @@ const setup = new SlashCommandBuilder()
             .setDescription('สร้างห้องเติมเงิน')
     )
 
+    // Create admin channel: /setup create-admin-channel
+    .addSubcommand(subcommand =>
+        subcommand
+            .setName('create-admin-channel')
+            .setDescription('สร้างห้องแจ้งเตือนสำหรับแอดมิน')
+    )
+
     //Admin only can execute this command
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 
@@ -170,6 +177,66 @@ setup.execute = async function (interaction) {
         }
 
 
+
+        // Call the function to update the config
+        updateConfig(cid);
+
+    } else if (interaction.options.getSubcommand() === 'create-admin-channel') {
+        // Create a new channel
+        const channel = await interaction.guild.channels.create({
+            name: '🔔︱ᴀᴅᴍɪɴ-ʟᴏɢꜱ',
+            type: ChannelType.GuildText,
+            topic: 'ห้องแจ้งเตือนสำหรับแอดมิน',
+            permissionOverwrites: [
+                {
+                    // Only admins can view this channel
+                    id: interaction.guild.roles.everyone.id,
+                    deny: [PermissionFlagsBits.ViewChannel],
+                }
+            ],
+        });
+
+        // Create embeds with sendEmbed function
+        const embeds = sendEmbed('แจ้งเตือน', `สร้างห้องแจ้งเตือนสำหรับแอดมินแล้ว \nห้อง: ${channel}\nChannel Id: ${channel.id}`, '#00ff00', 'SetUp', footerImage);
+
+        // Reply to user
+        await interaction.reply({ embeds: [embeds], ephemeral: true });
+
+        // Get the channel id
+        const cid = channel.id;
+
+        // Update the config file
+        function updateConfig(cid) {
+            const discordConfigPath = path.join(__dirname, '../config/discord.json');
+
+            try {
+                const data = fs.readFileSync(discordConfigPath, 'utf8');
+                const oldConfig = JSON.parse(data);
+
+                const newConfig = {
+                    ...oldConfig,
+                    general: {
+                        ...oldConfig.general,
+                        admin_channel: {
+                            ...oldConfig.general.admin_channel,
+                            channelId: cid || oldConfig.general.admin_channel.channelId,
+                        },
+                    },
+                };
+
+                const serializedConfig = JSON.stringify(newConfig, (key, value) => {
+                    if (typeof value === 'bigint') {
+                        return value.toString();
+                    }
+                    return value;
+                }, 2);
+
+                fs.writeFileSync(discordConfigPath, serializedConfig, 'utf8');
+                console.log('Config updated successfully.');
+            } catch (error) {
+                console.error('Error updating config:', error);
+            }
+        }
 
         // Call the function to update the config
         updateConfig(cid);

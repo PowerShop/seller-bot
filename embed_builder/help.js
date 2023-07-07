@@ -20,6 +20,7 @@ const embedConfig = require('../config/embed.json');
         .addFields(
             { name: '**/topup**', value: 'เติมเงินด้วยซองของขวัญ' },
             { name: '**/voucher**', value: 'ตรวจสอบสถานะซองของขวัญ (ไม่มีการใช้งานซอง)' },
+            
             // Add more fields here as needed
         );
 

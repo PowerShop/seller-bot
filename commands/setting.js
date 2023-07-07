@@ -6,20 +6,18 @@
 // ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
 
 /*
-    This is huge code, so If you can't understand, you can ask me on discord
-    Command: /setting
-        Subcommand: /setting truewallet <phone> <rate>
-        Subcommand: /setting topup editcondition <target> <amount> <command>
-        Subcommand: /setting topup addcondition <amount> <command>
-        Subcommand: /setting topup removecondition <target>
-        Subcommand: /setting topup listcondition
+    * This is huge code, so If you can't understand, you can ask me on discord
+    * Command: /setting
+        * Subcommand: /setting truewallet <phone> <rate>
+        * Subcommand: /setting topup editcondition <target> <amount> <command>
+        * Subcommand: /setting topup addcondition <amount> <command>
+        * Subcommand: /setting topup removecondition <target>
+        * Subcommand: /setting topup listcondition
 */
 
 // Importing modules
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
-// Import topup.json
-const topupJson = require('../config/topup.json');
 // let { condition } = topupJson.topup;
 
 // Import embed.json
@@ -37,13 +35,6 @@ const { reloadConfig } = require('../functions/clearCache');
 const fs = require('fs');
 const path = require('path');
 
-// Create choices for the condition options
-const conditionChoices = Object.entries(topupJson.topup.condition).map(([amount, command]) => ({
-    name: amount,
-    // value: amount,
-}));
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Create a new command: /setting
@@ -59,11 +50,11 @@ const setting = new SlashCommandBuilder()
             .addStringOption(option =>
                 option.setName('phone')
                     .setDescription('เบอร์โทรศัพท์ Truewallet')
-                    .setRequired(true))
+                    .setRequired(false))
             .addStringOption(option =>
                 option.setName('rate')
                     .setDescription('อัตราการเติมเงินต่อ 1 บาท (* เท่าไหร่)')
-                    .setRequired(true))
+                    .setRequired(false))
     )
 
     // Create topup command: /setting topup editcondition <target> <amount> <commad>
@@ -173,11 +164,19 @@ setting.execute = async (interaction) => {
         // Call the function to update the config
         updateConfig(interaction);
 
-        // Create embeds with sendEmbed function
-        const embeds = sendEmbed('แจ้งเตือน', `ตั้งค่า Truewallet \nเบอร์โทรศัพท์ **${phone}** \nอัตราการเติมเงิน x **${rate}** บาท`, '#00ff00', footerText, footerImage);
+        setTimeout(async () => {
+            // Reload config
+            const topupJson = reloadConfig("topup");
+            // If phone and rate is null show old config
+            if (phone === null || rate === null) {
+                // Create embeds with sendEmbed function
+                const embeds = sendEmbed('แจ้งเตือน', `ตั้งค่า Truewallet \nเบอร์โทรศัพท์ **${topupJson.voucher.phone}** \nอัตราการเติมเงิน x **${topupJson.voucher.rate}** บาท`, '#00ff00', footerText, footerImage);
 
-        // Reply to user
-        await interaction.reply({ embeds: [embeds], ephemeral: true });
+                // Reply to user
+                await interaction.reply({ embeds: [embeds], ephemeral: true });
+            }
+        }, 1500);
+
 
     } else if (interaction.options.getSubcommand() === 'editcondition') {
 

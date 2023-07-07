@@ -16,8 +16,6 @@ const { SlashCommandBuilder } = require('discord.js');
 // Import discord.json
 const discordConfig = require('../config/discord.json');
 
-let timeOutError;
-
 // Import the embed.json file
 const config = require('../config/embed.json');
 const footerIcon = config.general.icon.footerIcon;
@@ -32,10 +30,14 @@ const { sendTopupCommands } = require('../functions/sendCommand');
 // Import sendEmbed function
 const { sendEmbed } = require('../functions/sendEmbed');
 
+// Import logToAdmin function
+const { logToAdmin } = require('../functions/logToAdmin');
+
+// Import convertErrorMsg
+const { convertErrorMsg } = require('../functions/convertErrorMsg');
+
 // Import rcon
 const { Rcon } = require('minecraft-rcon-client');
-
-const { resolve } = require('path');
 
 // Declare variable: transaction-log
 const transactionLog = discordConfig.general.transaction_logs.channelId;
@@ -80,51 +82,57 @@ topup.execute = async function (interaction) {
     const rate = topupJson.voucher.rate;
     const phone = topupJson.voucher.phone;
 
-    // Check if server is offline or online
-    // const isOnline = require('../functions/statusServer');
-
     // Clear cache before use
     delete require.cache[require.resolve('../config/server.json')];
     const serverConfig = require('../config/server.json');
 
-    // Try to check if server ? online : offline and then check if rcon ? can connect : can't connect
-    // (async () => {
+    // Check if server is online ? offline
+    // if (await isOnline()) {                                                                                                                                       
+    const host = serverConfig.general.rcon.host
+    const port = serverConfig.general.rcon.port;
+    const password = serverConfig.general.rcon.password;
+    const timeout = serverConfig.general.rcon.timeout;
 
-        // Check if server is online ? offline
-        // if (await isOnline()) {
-        const host = serverConfig.general.rcon.host
-        const port = serverConfig.general.rcon.port;
-        const password = serverConfig.general.rcon.password;
-        const timeout = serverConfig.general.rcon.timeout;
-        // If server is online, continue
-        async function connectToRconWithTimeout(port, host, password, timeout) {
-            // Creating a promise that will resolve after connecting to the rcon
+    // Get user id
+    const user = interaction.user.id;
 
-            const rconConnectPromise = new Promise(async (resolve, reject) => {
-                try {
-                    const rcon = new Rcon({ port, host, password });
-                    await rcon.connect();
-                    resolve(rcon);
-                } catch (e) {
-                    reject(e);
-                }
-            });
+    // Connect to rcon
+    function connectToRcon(port, host, password, timeout) {
+        return new Promise((resolve, reject) => {
+            const client = new Rcon({ port, host, password });
 
-            // Wrapping the rcon connection promise with a timer promise that will reject if time runs out
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => {
-                    reject(new Error("Connection timed out | Check your server status or rcon config"));
-                    timeOutError = 'Connection timed out';
-                }, timeout);
-            });
+            const timeoutId = setTimeout(() => {
+                clearTimeout(timeoutId);
+                // console.log('หมดเวลาการเชื่อมต่อเซิร์ฟเวอร์');
 
-            // Waiting for either the rcon connection to succeed or the time to run out
-            const result = await Promise.race([rconConnectPromise, timeoutPromise]);
+                // Reject the promise to indicate the connection timeout
+                reject(new Error('Connection timeout'));
+            }, timeout);
 
-            // Log to console
-            console.log("Test connection to RCON before topup => Success!");
+            // เมื่อ Timeout เสร็จสิ้น
+            timeoutId.unref();
 
-            // If the rcon connection succeeded, continue;
+            // Connect to rcon
+            client.connect()
+                .then(() => {
+                    console.log('เชื่อมต่อเซิร์ฟเวอร์สำเร็จ');
+                    clearTimeout(timeoutId);
+                    resolve(client);
+                })
+                .catch(err => {
+                    // console.log('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ สาเหตุ: ' + err.message);
+                    
+                    clearTimeout(timeoutId);
+
+                    // Reject the promise to indicate the connection timeout
+                    reject(new Error(err));
+                });
+        });
+    }
+
+    connectToRcon(port, host, password, timeout)
+        .then(client => {
+            // ทำสิ่งที่ต้องการที่นี่
 
             // Start the topup process
             twvoucher(phone, url).then(redeemed => {
@@ -133,7 +141,7 @@ topup.execute = async function (interaction) {
                 const topupAmount = redeemed.amount * rate;
 
                 // Create a topupSuccess embed with sendEmbed function
-                const topupSuccess = sendEmbed('แจ้งเตือน', `**${username}** เติมเงินสำเร็จ จำนวน **${topupAmount}** บาท`, '#FF0000', footerText, footerIcon);
+                const topupSuccess = sendEmbed('แจ้งเตือน', `<@${user}> เติมเงินสำเร็จ จำนวน **${topupAmount}** บาท`, '#FF0000', footerText, footerIcon);
 
                 // Send the embed to the channel
                 interaction.reply({ embeds: [topupSuccess], ephemeral: true });
@@ -189,7 +197,7 @@ topup.execute = async function (interaction) {
 
                 // Create a topupFail embed with sendEmbed function and send it to the user
 
-                const topupFail = sendEmbed('แจ้งเตือน', `**${username}** เติมเงินไม่สำเร็จ \n เหตุผล: **${realErrMessage}**\nโปรดลองใหม่อีกครั้ง`, '#FF0000', footerText, footerIcon);
+                const topupFail = sendEmbed('แจ้งเตือน', `<@${user}> เติมเงินไม่สำเร็จ \n เหตุผล: **${realErrMessage}**\nโปรดลองใหม่อีกครั้งครับ`, '#ff0000', footerText, footerIcon);
 
                 // Reply message to user who topup and hide from other user
                 // Interaction reply
@@ -202,7 +210,7 @@ topup.execute = async function (interaction) {
                 if (discordConfig.general.transaction_logs.enabled === true) {
 
                     // Create a log embed with sendEmbed function
-                    const log = sendEmbed('LOG - เติมเงิน', `ผู้เล่น **${username}** เติมเงินไม่สำเร็จ \nเหตุผล: **${realErrMessage}** \nลิ้งก์ซอง: \||${url}\||`, '#FF0000', footerText, footerIcon);
+                    const log = sendEmbed('LOG - เติมเงิน', `ผู้เล่น **${username}** เติมเงินไม่สำเร็จ \nเหตุผล: **${realErrMessage}** \nลิ้งก์ซอง: \||${url}\||`, '#ff0000', footerText, footerIcon);
 
                     // Send the embed to the channel
                     channel.send({ embeds: [log] });
@@ -224,7 +232,7 @@ topup.execute = async function (interaction) {
 
                 // Always send command to server when topup fail
                 // debug = true; debug = false;
-                const debug = true;
+                const debug = false;
 
                 if (debug === true) {
 
@@ -236,49 +244,26 @@ topup.execute = async function (interaction) {
 
                 }
             })
-        }
-        // If can't connect to RCON
-        try {
 
-            const rconTimeoutMs = timeout; // Maximum time in milliseconds allowed to establish a connection
-            const rconEmbeds = await connectToRconWithTimeout(port, host, password, rconTimeoutMs);
-            // const rconEmbed = sendEmbed('แจ้งเตือน', `ไม่สามารถเชื่อมต่อไปยัง RCON ของเซิร์ฟเวอร์ได้\nโปรดติดต่อผู้ดูแลเซิร์ฟเวอร์`, '#ff0000', footerText, footerIcon);
+        })
+        .catch(err => {
+            
+            // replace Error: to empty string
+            err.message = err.message.replace('Error: ', '');
+            console.log(err.message);
 
-            await interaction.reply({ embeds: [rconEmbeds], ephemeral: true });
-            return;
-        } catch (error) {
-            // sendEmbed and timeOutError and error is defined
-            const errMessage = error.message.replace('Error: ', '');
-            console.log(errMessage);
-            if (errMessage === 'Connection error' || errMessage === 'Authentication error' || timeOutError === 'Connection timed out') {
-                const rconEmbed = sendEmbed('แจ้งเตือน', `ไม่สามารถเชื่อมต่อไปยัง RCON ของเซิร์ฟเวอร์ได้\nโปรดติดต่อผู้ดูแลเซิร์ฟเวอร์\nสาเหตุ: **\`${errMessage}\`**`, '#ff0000', footerText, footerIcon);
-                await interaction.reply({ embeds: [rconEmbed], ephemeral: true });
-                return;        
-            } else {
-                console.log(errMessage);
-                const rconEmbed = sendEmbed('แจ้งเตือน', `ไม่สามารถเชื่อมต่อไปยัง RCON ของเซิร์ฟเวอร์ได้\nโปรดติดต่อผู้ดูแลเซิร์ฟเวอร์\nสาเหตุ: **\`${errMessage}\`**`, '#ff0000', footerText, footerIcon);
-                // await interaction.reply({ embeds: [rconEmbed], ephemeral: true });
-                // reject(rconEmbed);
-                return;
-            }
-            // await interaction.followUp({ embeds: [embeds], ephemeral: true });
+            // Use convertErrorMsg function to convert error message to friendly message
+            err.message = convertErrorMsg(err.message);
 
-        }
-        // Return true to stop the function
-        // } else {
-        //     const fail = sendEmbed('แจ้งเตือน', 'ขออภัย ขณะนี้เซิร์ฟเวอร์ไม่ได้เปิดทำการ จึงไม่สามารถเติมเงินได้ \nหากนี่เป็นข้อผิดพลาด โปรดแจ้งไปยังผู้ดูแลเซิร์ฟเวอร์', '#ff0000', footerText, footerIcon);
-        //     await interaction.reply({ embeds: [fail], ephemeral: true });
-        //     return false;
-        // }
-    // })();
+            // Create a timeOutError embed with sendEmbed function and send it to the user
+            const errorMsg = sendEmbed('แจ้งเตือน', `ไม่สามารถเติมเงินได้ โปรดติดต่อผู้ดูแลเซิร์ฟเวอร์\nสาเหตุ: **${err.message}**\n\n***ซองของขวัญยังไม่ถูกใช้งาน**`, '#FF0000', footerText, footerIcon);
+            interaction.reply({ embeds: [errorMsg], ephemeral: true });
+            
+            
+            // Call the function logToAdmin
+            logToAdmin(`ผู้เล่น ${username} เติมเงินไม่สำเร็จ\n เหตุผล: **${err.message}**`);
+        });
 }
 
-// Export the module
-module.exports = topup.toJSON();
-
-//    ██╗  ██╗██╗   ██╗███████╗
-//    ╚██╗██╔╝╚██╗ ██╔╝╚══███╔╝
-//     ╚███╔╝  ╚████╔╝   ███╔╝
-//     ██╔██╗   ╚██╔╝   ███╔╝
-// ██╗██╔╝ ██╗   ██║   ███████╗
-// ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
+// Export the command
+module.exports = topup;

@@ -5,9 +5,10 @@
 // ██╗██╔╝ ██╗   ██║   ███████╗
 // ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
 
-// Create a function to send embed message
-// Reg args: (title, description, color, footer, iconURL)
-
+/*
+    * Create a function to send embed message
+    * Reg args: (title, description, color, footer, iconURL)
+*/
 // Import the EmbedBuilder class from discord.js
 const { EmbedBuilder } = require('discord.js');
 

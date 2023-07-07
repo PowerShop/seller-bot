@@ -6,12 +6,12 @@
 // ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
 
 /*
-    คำสั่ง RCON
-    ใช้สำหรับจัดการ RCON ของเซิฟเวอร์
-    Command: /rcon sendcommand <command>
-    Command: /rcon testconnect
-    Command: /rcon getconfig
-    Command: /rcon setconfig <host> <port> <password>
+    * คำสั่ง RCON
+    * ใช้สำหรับจัดการ RCON ของเซิฟเวอร์
+    * Command: /rcon sendcommand <command>
+    * Command: /rcon testconnect
+    * Command: /rcon getconfig
+    * Command: /rcon setconfig <host> <port> <password>
     
 */
 
@@ -22,6 +22,7 @@ config = require('../config/server.json');
 
 const embedConfig = require('../config/embed.json');
 const footerIcon = embedConfig.general.icon.footerIcon;
+const footerText = embedConfig.general.footerText;
 
 // Import fs
 const fs = require('fs');
@@ -32,11 +33,14 @@ const path = require('path');
 // Import function sendEmbed
 const { sendEmbed } = require('../functions/sendEmbed.js');
 
+// Import convertErrorMsg
+const { convertErrorMsg } = require('../functions/convertErrorMsg');
+
 // Import rcon
 const { Rcon } = require('minecraft-rcon-client')
 
 // Import EmbedBuilder & SlashCommandBuilder
-const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 
 const rcon = new SlashCommandBuilder()
@@ -76,22 +80,19 @@ const rcon = new SlashCommandBuilder()
             .addStringOption(option =>
                 option.setName('host')
                     .setDescription('IP ของ RCON')
-                    .setRequired(true))
+                    .setRequired(false))
             .addStringOption(option =>
                 option.setName('port')
                     .setDescription('Port ของ RCON')
-                    .setRequired(true))
+                    .setRequired(false))
             .addStringOption(option =>
                 option.setName('password')
                     .setDescription('รหัสผ่าน RCON')
-                    .setRequired(true))
-    )
-
-    // reload config โหลดค่า config ใหม่
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName('reloadconfig')
-            .setDescription('โหลดค่า config ใหม่')
+                    .setRequired(false))
+            .addStringOption(option =>
+                option.setName('timeout')
+                    .setDescription('เวลาที่ใช้ในการเชื่อมต่อ RCON (timeout)')
+                    .setRequired(false))
     )
 
     // rcon manage button
@@ -116,7 +117,7 @@ rcon.execute = async function (interaction) {
             serverConfig = require('../config/server.json');
         } catch (e) {
             console.error("Can't read server config file.");
-            const embeds = sendEmbed('แจ้งเตือน', `ไม่สามารถอ่านไฟล์ config/server.json ได้`, '#ff0000', 'RCON', footerIcon);
+            const embeds = sendEmbed('แจ้งเตือน', `ไม่สามารถอ่านไฟล์ config/server.json ได้`, '#ff0000', footerText, footerIcon);
             await interaction.reply({ embeds: [embeds], ephemeral: true });
             return;
         }
@@ -157,9 +158,9 @@ rcon.execute = async function (interaction) {
 
             // Creating and returning an embed in case of success
             if (command === null) {
-                return sendEmbed('แจ้งเตือน', `เชื่อมต่อ RCON สำเร็จ`, '#00ff00', 'RCON', footerIcon);
+                return sendEmbed('แจ้งเตือน', `ทดสอบการเชื่อมต่อ RCON สำเร็จ`, '#00ff00', footerText, footerIcon);
             } else {
-                return sendEmbed('แจ้งเตือน', `ส่งคำสั่ง: \`${command}\` สำเร็จแล้ว`, '#00ff00', 'RCON', footerIcon);
+                return sendEmbed('แจ้งเตือน', `ส่งคำสั่ง: \`${command}\` สำเร็จแล้ว`, '#00ff00', footerText, footerIcon);
             }
         }
 
@@ -170,10 +171,18 @@ rcon.execute = async function (interaction) {
             const rconEmbed = await connectToRconWithTimeout(port, host, password, rconTimeoutMs, command);
 
             await interaction.reply({ embeds: [rconEmbed], ephemeral: true });
-        } catch (error) {
-            console.error("Can't connect to server.");
-            const embeds = sendEmbed('แจ้งเตือน', `ไม่สามารถเชื่อมต่อ RCON ได้\nตรวจสอบการตั้งค่า RCON ได้ที่\n📁 \`config/server.json\`\nหรือใช้คำสั่ง \`/rcon getconfig\``, '#ff0000', 'RCON', footerIcon);
+        } catch (e) {
+            // Replace e.message with a more user friendly message via switch case
+            // Use convertErrorMsg function to convert error message to friendly message
+            e.message = convertErrorMsg(e.message);
 
+            // Log to console
+            console.error("Can't connect to rcon server: " + e.message);
+
+            // Create embeds with sendEmbed function
+            const embeds = sendEmbed('แจ้งเตือน', `ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้\nสาเหตุ: ${e.message}`, '#ff0000', footerText, footerIcon);
+
+            // Send embeds to user
             await interaction.reply({ embeds: [embeds], ephemeral: true });
         }
     }
@@ -185,9 +194,10 @@ rcon.execute = async function (interaction) {
         const host = config.general.rcon.host;
         const port = config.general.rcon.port;
         const password = config.general.rcon.password;
+        const timeout = config.general.rcon.timeout;
 
         // Create embeds with sendEmbed function
-        const embeds = sendEmbed('แจ้งเตือน', `**การตั้งค่า RCON**\n**Host:** ${host}\n**Port:** ${port}\n**Password:** ${password}`, '#00ff00', 'RCON', footerIcon);
+        const embeds = sendEmbed('แจ้งเตือน', `**การตั้งค่า RCON**\n**Host:** ${host}\n**Port:** ${port}\n**Password:** ${password}\n**Timeout:** ${timeout}`, '#00ff00', 'RCON', footerIcon);
 
         // Reply to user
         interaction.reply({ embeds: [embeds], ephemeral: true });
@@ -197,7 +207,7 @@ rcon.execute = async function (interaction) {
         const ip = interaction.options.getString('host');
         const port = interaction.options.getString('port');
         const password = interaction.options.getString('password');
-
+        const timeout = interaction.options.getString('timeout');
 
         // Update config.json with new values
         function updateConfig() {
@@ -215,6 +225,7 @@ rcon.execute = async function (interaction) {
                             host: ip || oldConfig.general.rcon.host,
                             port: parseInt(port) || oldConfig.general.rcon.port,
                             password: password || oldConfig.general.rcon.password,
+                            timeout: parseInt(timeout) || oldConfig.general.rcon.timeout
                         }
                     }
                 };
@@ -243,93 +254,17 @@ rcon.execute = async function (interaction) {
         // Call the function to update the config
         updateConfig(interaction);
 
-        // Create embeds with sendEmbed function
-        const embeds = sendEmbed('แจ้งเตือน', `ตั้งค่าเซิร์ฟเวอร์เรียบร้อยแล้ว\nรายละเอียดการตั้งค่า IP: **${ip}**\nPort: **${port}**\nPassword: **${password}**`, '#00ff00', 'RCON', footerIcon);
-
-        // Reply to user
-        await interaction.reply({ embeds: [embeds], ephemeral: true });
-
-    } else if (interaction.options.getSubcommand() === 'reloadconfig') {
-
-        // Reload config.json
-        config = reloadConfig();
-
-        // Create embeds with sendEmbed function
-        const embeds = sendEmbed('แจ้งเตือน', `Reload config เรียบร้อยแล้ว`, '#00ff00', 'RCON', 'https://i.imgur.com/eXXjLOa.gif');
-
-        // Reply to user
-        await interaction.reply({ embeds: [embeds], ephemeral: true });
-    } else if (interaction.options.getSubcommand() === 'manage') {
-
-
-        // ██████╗ ███████╗████████╗ █████╗ ██╗
-        // ██╔══██╗██╔════╝╚══██╔══╝██╔══██╗██║
-        // ██████╔╝█████╗     ██║   ███████║██║
-        // ██╔══██╗██╔══╝     ██║   ██╔══██║╚═╝
-        // ██████╔╝███████╗   ██║   ██║  ██║██╗
-        // ╚═════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝
-
-        // Call the function
-        manageRcon();
-
-        // Function to manage rcon
-        async function manageRcon() {
-            const reload = new ButtonBuilder()
-                .setCustomId('reload')
-                .setLabel('Reload Config')
-                .setStyle(ButtonStyle.Success);
-
-            const testconnection = new ButtonBuilder()
-                .setCustomId('testconnection')
-                .setLabel('Test Connection')
-                .setStyle(ButtonStyle.Secondary);
-
-            const row = new ActionRowBuilder()
-                .addComponents(reload, testconnection);
-
+        // If others config is null show old config
+        if (ip === null || port === null || password === null || timeout === null) {
             // Create embeds with sendEmbed function
-            const embeds = sendEmbed('แจ้งเตือน', `คุณสามารถจัดการ RCON ได้ที่นี่`, '#00ff00', 'RCON', footerIcon);
+            const embeds = sendEmbed('แจ้งเตือน', `ตั้งค่าเซิร์ฟเวอร์เรียบร้อยแล้ว\nรายละเอียดการตั้งค่า IP: **${config.general.rcon.host}**\nPort: **${config.general.rcon.port}**\nPassword: **${config.general.rcon.password}**\nTimeout: **${config.general.rcon.timeout}**`, '#00ff00', footerText, footerIcon);
 
             // Reply to user
-            await interaction.reply({
-                embeds: [embeds],
-                components: [row],
-            });
-
-            // Create a collector
-            const collectorFilter = i => i.user.id === interaction.user.id;
-            let keepCollecting = true;
-
-            while (keepCollecting) {
-                try {
-                    const buttonInteraction = await interaction.channel.awaitMessageComponent({ filter: collectorFilter, time: 3600000, max: 5 });
-
-                    if (buttonInteraction.customId === 'reload') {
-                        await buttonInteraction.update({ content: `Reload Config Success!`, components: [row] });
-                        // Perform the reload config action here
-                    } else if (buttonInteraction.customId === 'testconnection') {
-                        await buttonInteraction.update({ content: 'Connection Success!', components: [row] });
-                        // Perform the test connection action here
-                    }
-
-                    // Reset the collector to continue listening for more button clicks
-                    keepCollecting = true;
-                } catch (err) {
-                    await interaction.editReply({ content: 'No interaction was collected.', components: [] });
-                    keepCollecting = false; // Exit the loop if no interactions are collected
-                }
-            }
+            await interaction.reply({ embeds: [embeds], ephemeral: true });
         }
 
+
     }
-
-    // Reload config.json
-    function reloadConfig() {
-        delete require.cache[require.resolve('../config/server.json')];
-        return require('../config/server.json');
-    }
-
-
 }
 
 // Export the module

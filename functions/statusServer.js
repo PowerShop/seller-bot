@@ -1,3 +1,14 @@
+//    ██╗  ██╗██╗   ██╗███████╗
+//    ╚██╗██╔╝╚██╗ ██╔╝╚══███╔╝
+//     ╚███╔╝  ╚████╔╝   ███╔╝ 
+//     ██╔██╗   ╚██╔╝   ███╔╝  
+// ██╗██╔╝ ██╗   ██║   ███████╗
+// ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
+
+/*
+    * This function is used to check if the server is online or not
+*/
+
 // Request type: GET
 // API: https://api.mcstatus.io/v2/status/java/<address>
 

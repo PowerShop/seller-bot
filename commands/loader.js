@@ -14,7 +14,8 @@
 // ╚═╝╚═╝     ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝
 
 /*
-    Load all commands from commands folder
+    * Load all commands from commands folder except loader.js
+    * Help to load all commands without manually add the command to the commands array
 */
 
 // Export the commands with loop from commands folder

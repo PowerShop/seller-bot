@@ -10,9 +10,11 @@
     Command: /voucher <url>
 */
 
-
 // Import discord.js module
-const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
+
+// Import sendEmbed function
+const { sendEmbed } = require('../functions/sendEmbed');
 
 // Import config
 const topupConfig = require('../config/topup.json');
@@ -43,19 +45,21 @@ voucher.execute = async function (interaction) {
     // Verify the url is format like https://gift.truemoney.com/campaign/?v=xxxxx
 
     if (url !== 'https://gift.truemoney.com/campaign/?v=' + voucherUrl) {
-        const errorEmbed = new EmbedBuilder()
-            .setColor(0x0099FF)
-            .setTitle('ตรวจสอบซองของขวัญ')
-            .setDescription('ลิ้งซองของขวัญไม่ถูกต้อง')
-            .setTimestamp()
-            .setFooter({ text: footerText, iconURL: footerIcon })
+
+        // Create errorEmbed with sendEmbed function
+        const errorEmbed = sendEmbed('ตรวจสอบซองของขวัญ', 'ลิ้งซองของขวัญไม่ถูกต้อง', '#ff0000', footerText, footerIcon);
+        
+        // Reply the errorEmbed
         await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+
+        // Log to console, if you want
+        // console.log(`[LOG] ${interaction.user.tag} check voucher: ${url}`);
     }
     else {
 
         // Verify the url and get data
         const response = await fetch(`https://gift.truemoney.com/campaign/vouchers/${voucherUrl}/verify?mobile=${topupConfig.voucher.phone}`);
-        
+
         // Get the data
         const voucherData = await response.json();
 
@@ -81,16 +85,14 @@ voucher.execute = async function (interaction) {
                 statusCode = 'ไม่พบข้อผิดพลาด/ไม่ทราบสาเหตุ';
         }
 
-        // Create a embed for voucher
-        const voucherEmbed = new EmbedBuilder()
-            .setColor(0x0099FF)
-            .setTitle('ตรวจสอบซองของขวัญ')
-            .setDescription(`เจ้าของซอง: ${voucherData.data.owner_profile.full_name}\nสถานะ: ${statusCode} \nจำนวนเงินในซอง: ${voucherData.data.voucher.amount_baht} บาท\nถูกใช้ไปแล้ว: ${voucherData.data.voucher.redeemed_amount_baht} บาท \nคงเหลือใช้งาน: (${voucherData.data.voucher.available}/${voucherData.data.voucher.redeemed} ครั้ง)`)
-            .setTimestamp()
-            .setFooter({ text: footerText, iconURL: footerIcon })
+        // Create voucherEmbed with sendEmbed function
+        const voucherEmbed = sendEmbed('ตรวจสอบซองของขวัญ', `เจ้าของซอง: ${voucherData.data.owner_profile.full_name}\nสถานะ: ${statusCode} \nจำนวนเงินในซอง: ${voucherData.data.voucher.amount_baht} บาท\nถูกใช้ไปแล้ว: ${voucherData.data.voucher.redeemed_amount_baht} บาท \nคงเหลือใช้งาน: (${voucherData.data.voucher.available}/${voucherData.data.voucher.redeemed} ครั้ง)`, '#0099FF', footerText, footerIcon);
 
         // Reply the embed
         await interaction.reply({ embeds: [voucherEmbed], ephemeral: true });
+
+        // Log to console, if you want
+        // console.log(`[LOG] ${interaction.user.tag} check voucher: ${url}`);
     }
 }
 

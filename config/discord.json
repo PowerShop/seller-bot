@@ -1,18 +1,22 @@
 {
-    "general": {
-        "bot": {
-            "clientId": "1124698913442648074",
-            "guildId": "1000433277942907043",
-            "token": "MTEyNDY5ODkxMzQ0MjY0ODA3NA.GTwpap.bjLCTyAx_LV9dpOoa6En3ghWXGphOZes264rKg",
-            "channelId": "1121151182535135362"
-        },
-        "transaction_logs": {
-            "enabled": false,
-            "channelId": "1124703929834410134"
-        },
-        "topup_channel": {
-            "enabled": true,
-            "channelId": "1124703967855775827"
-        }
+  "general": {
+    "bot": {
+      "clientId": "1124698913442648074",
+      "guildId": "1000433277942907043",
+      "token": "MTEyNDY5ODkxMzQ0MjY0ODA3NA.GTwpap.bjLCTyAx_LV9dpOoa6En3ghWXGphOZes264rKg",
+      "channelId": "1121151182535135362"
+    },
+    "transaction_logs": {
+      "enabled": false,
+      "channelId": "1124703929834410134"
+    },
+    "topup_channel": {
+      "enabled": true,
+      "channelId": "1124703967855775827"
+    },
+    "admin_channel": {
+      "enabled": true,
+      "channelId": "1125442924805636178"
     }
+  }
 }

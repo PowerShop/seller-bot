@@ -95,10 +95,10 @@ client.once('ready', async () => {
     if (channelId === null) {
     } else {
         // Delete the welcome message
-        // deleteWelcomeMessage(client, channelId);
+        deleteWelcomeMessage(client, channelId);
 
         // Send the welcome message
-        // sendWelcomeMessage(client, channelId);
+        sendWelcomeMessage(client, channelId);
     }
 
     // Set the bot's activity
