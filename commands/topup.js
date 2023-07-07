@@ -153,7 +153,7 @@ topup.execute = async function (interaction) {
                 if (discordConfig.general.transaction_logs.enabled === true) {
 
                     // Create a log embed with sendEmbed function
-                    const log = sendEmbed('LOG - เติมเงิน', `ผู้เล่น **${username}** เติมเงินสำเร็จ \nจำนวน **${topupAmount}** บาท \nลิ้งก์ซอง ${url}`, '#FF0000', footerText, footerIcon);
+                    const log = sendEmbed('LOG - เติมเงิน', `ผู้เล่น **${username}** เติมเงินสำเร็จ \nจำนวน **${topupAmount}** บาท (เรทเติมเงิน x **${rate}**) \nลิ้งก์ซอง ${url}`, '#FF0000', footerText, footerIcon);
 
                     // Send log to discord channelid from config.server.log_channel_id
                     const channel = interaction.client.channels.cache.get(transactionLog);
@@ -176,7 +176,7 @@ topup.execute = async function (interaction) {
                 let realErrMessage;
                 switch (errMessage) {
                     case 'INVAILD_VOUCHER':
-                        realErrMessage = 'ลิ้งก์ไม่ถูกต้อง';
+                        realErrMessage = 'ลิ้งก์ซองของขวัญไม่ถูกต้อง';
                         break;
                     case 'VOUCHER_EXPIRED':
                         realErrMessage = 'ลิ้งก์หมดอายุ';
